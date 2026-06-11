@@ -21,15 +21,19 @@ def get_supabase_admin() -> Client:
 # ── 民调 ─────────────────────────────────────────────────────────────────────
 @st.cache_data(ttl=3600, show_spinner="加载民调数据…")
 def load_polls() -> pd.DataFrame:
-    """分页拉取全量 polls,返回 DataFrame(poll_date 转为 datetime)。"""
+    """分页拉取全量 polls,返回 DataFrame(poll_date 转为 datetime)。
+    表还没建时返回空表,站点照常打开。"""
     db = get_supabase()
     rows = []
     offset = 0
     while True:
-        batch = (db.table("polls").select("*")
-                 .order("poll_date").order("id")
-                 .range(offset, offset + PAGE - 1)
-                 .execute().data) or []
+        try:
+            batch = (db.table("polls").select("*")
+                     .order("poll_date").order("id")
+                     .range(offset, offset + PAGE - 1)
+                     .execute().data) or []
+        except Exception:
+            break
         rows.extend(batch)
         if len(batch) < PAGE:
             break
@@ -44,7 +48,10 @@ def load_polls() -> pd.DataFrame:
 # ── 站点配置(速览等)─────────────────────────────────────────────────────────
 def get_config(key, default=""):
     db = get_supabase()
-    rows = db.table("site_config").select("value,updated_at").eq("key", key).execute().data
+    try:
+        rows = db.table("site_config").select("value,updated_at").eq("key", key).execute().data
+    except Exception:
+        rows = []
     if rows:
         return rows[0]["value"] or default, rows[0]["updated_at"]
     return default, None
@@ -62,9 +69,12 @@ def set_config(key, value):
 # ── 预测 ─────────────────────────────────────────────────────────────────────
 def get_predictions():
     db = get_supabase()
-    return (db.table("predictions").select("*")
-            .order("made_on", desc=True).order("id", desc=True)
-            .execute().data) or []
+    try:
+        return (db.table("predictions").select("*")
+                .order("made_on", desc=True).order("id", desc=True)
+                .execute().data) or []
+    except Exception:
+        return []
 
 
 def add_prediction(data: dict):
@@ -82,9 +92,12 @@ def resolve_prediction(pid, status, note):
 # ── 研判文章 ──────────────────────────────────────────────────────────────────
 def get_analyses(limit=100):
     db = get_supabase()
-    return (db.table("analysis_posts").select("*")
-            .order("date", desc=True).order("id", desc=True)
-            .limit(limit).execute().data) or []
+    try:
+        return (db.table("analysis_posts").select("*")
+                .order("date", desc=True).order("id", desc=True)
+                .limit(limit).execute().data) or []
+    except Exception:
+        return []
 
 
 def add_analysis(data: dict):

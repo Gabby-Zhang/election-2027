@@ -48,7 +48,7 @@ show = sub.sort_values(["poll_date", "id"], ascending=False)[
     ["poll_date", "source", "round", "candidate", "party", "score",
      "scenario_group", "scenario", "sample_size", "fieldwork_start", "fieldwork_end"]]
 st.dataframe(
-    show, use_container_width=True, height=560, hide_index=True,
+    show, width="stretch", height=560, hide_index=True,
     column_config={
         "poll_date": st.column_config.DateColumn("日期", format="YYYY-MM-DD"),
         "source": "机构", "round": "轮次", "candidate": "候选人", "party": "政党",

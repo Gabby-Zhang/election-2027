@@ -122,7 +122,7 @@ with tab1:
     with col_b:
         window = st.slider("滚动平均窗口(期)", 3, 20, 8)
     sub = r1[r1["scenario_group"] == group]
-    st.plotly_chart(trend_chart(sub, window), use_container_width=True)
+    st.plotly_chart(trend_chart(sub, window), width="stretch")
     st.caption("浅色散点 = 各机构原始数据;实线 = 近 {} 期滚动平均。"
                "同一场景分组内可能混有细节略不同的假设(以原始数据页为准)。".format(window))
 
@@ -146,7 +146,7 @@ with tab2:
         fig2 = trend_chart(sub2, window=5)
         fig2.add_hline(y=50, line_dash="dash", line_color="#999",
                        annotation_text="50%")
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
 
 st.caption("数据来源:法文维基百科民调列表页,每日自动更新 · "
            "[原始页面]({})".format(
