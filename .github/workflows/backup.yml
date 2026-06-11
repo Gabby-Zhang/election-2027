@@ -1,0 +1,40 @@
+name: 每周备份数据表
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'   # 每周一 UTC 05:00
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: pip install supabase
+
+      - name: 导出全部数据表
+        run: python scripts/backup_tables.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+      - name: 上传备份 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: backup/
+          retention-days: 90
+
+      - name: 失败时推送 ntfy 通知
+        if: failure()
+        run: |
+          curl -s -H "Title: election-2027 backup failed" -H "Tags: warning" \
+               -d "每周数据备份 workflow 失败,请检查 GitHub Actions 日志" \
+               https://ntfy.sh/ss-calendar-update
