@@ -70,11 +70,14 @@ create table if not exists candidates (
   declared_on date,                            -- 宣布日期(declared 时填)
   issues      text[] default '{}',             -- 招牌议题 chips
   note        text,                            -- 一行点评(如 "数字城案" / "三个月窗口")
+  avatar_url  text,                            -- 头像图 URL(维基头像);空则首页降级为姓名首字圆形
   sort_order  int not null default 0,          -- 同阵营内排序,大在前
   active      boolean not null default true,   -- 下架不删(战绩文化)
   created_at  timestamptz default now()
 );
 create index if not exists candidates_camp_idx on candidates (camp, sort_order desc);
+-- 已建过表的库补列:
+alter table candidates add column if not exists avatar_url text;
 
 -- ── Catalyst Events 催化事件(首页待观察事件时间线)──────────────────────────
 create table if not exists timeline_events (

@@ -88,19 +88,30 @@ if cands:
             for i in (c.get("issues") or []))
         note = ('<div style="margin-top:7px;font-size:11.5px;color:#6b7280;'
                 'line-height:1.4;">{}</div>'.format(c["note"])) if c.get("note") else ""
+        if c.get("avatar_url"):
+            avatar = ('<img src="{}" alt="{}" style="width:38px;height:38px;'
+                      'border-radius:50%;object-fit:cover;object-position:top;'
+                      'border:0.5px solid rgba(0,0,0,.12);flex:none;">'
+                      ).format(c["avatar_url"], c["name"])
+        else:
+            avatar = ('<div style="width:38px;height:38px;border-radius:50%;'
+                      'background:{fill};color:{ink};display:flex;align-items:center;'
+                      'justify-content:center;font-size:15px;font-weight:500;flex:none;">'
+                      '{ch}</div>').format(fill=fill, ink=ink, ch=c["name"][:1])
         return (
             '<div style="flex:1 1 220px;min-width:210px;background:#fff;'
             'border:0.5px solid rgba(0,0,0,.12);border-left:3px solid {accent};'
             'border-radius:12px;padding:11px 13px;">'
             '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
-            '<div><div style="font-weight:500;font-size:15px;">{name}</div>'
-            '<div style="font-size:12px;color:#6b7280;">{party} · {status}</div></div>'
+            '<div style="display:flex;gap:9px;align-items:center;min-width:0;">{avatar}'
+            '<div style="min-width:0;"><div style="font-weight:500;font-size:15px;">{name}</div>'
+            '<div style="font-size:12px;color:#6b7280;">{party} · {status}</div></div></div>'
             '<div style="text-align:right;white-space:nowrap;">'
             '<div style="font-size:22px;font-weight:500;line-height:1;">{pct} {trend}</div></div>'
             '</div>'
             '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px;">{chips}</div>'
             '{note}</div>'
-        ).format(accent=CAMP_ACCENT[c["camp"]], name=c["name"],
+        ).format(accent=CAMP_ACCENT[c["camp"]], avatar=avatar, name=c["name"],
                  party=c.get("party") or "", status=status, pct=pct,
                  trend=_trend_html(s["trend"]), chips=chips, note=note)
 
@@ -147,13 +158,15 @@ if st.session_state.get("is_admin"):
             decl = st.checkbox("已宣布参选")
             iss = st.text_input("招牌议题(逗号分隔)", placeholder="退休60岁, 媒体反垄断")
             nt = st.text_input("一行点评")
+            av = st.text_input("头像 URL(可选)", placeholder="https://…jpg;留空则首字圆")
             so = st.number_input("排序(大在前)", value=50, step=10)
             if st.form_submit_button("保存候选人") and cn.strip():
                 upsert_candidate({
                     "name": cn.strip(), "poll_name": pn.strip() or None,
                     "party": pty.strip() or None, "camp": cmp, "declared": decl,
                     "issues": [t.strip() for t in iss.split(",") if t.strip()],
-                    "note": nt.strip() or None, "sort_order": int(so), "active": True})
+                    "note": nt.strip() or None, "avatar_url": av.strip() or None,
+                    "sort_order": int(so), "active": True})
                 st.success("已保存"); st.rerun()
         with ce.form("add_event", clear_on_submit=True):
             st.markdown("**Catalyst Event**")

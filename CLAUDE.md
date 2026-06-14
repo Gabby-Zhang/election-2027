@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 python3 scripts/fetch_polls.py --dry-run   # 解析维基民调,打印场景统计,不写库
 python3 scripts/fetch_polls.py             # 抓取并 upsert 入库
+python3 scripts/seed_dashboard.py          # 候选人花名册 + Catalyst Events 种子(按 name upsert,可重复跑)
 streamlit run app.py                       # 本地起站
 
 # 讨论成果入库(stdin JSON,格式见 docs/讨论会话接入说明.md)
@@ -40,12 +41,24 @@ assert not at.exception
 ```
 法文维基民调页(主源,每日 GitHub Actions)──→ Supabase polls 表 ──→ Streamlit 四页面
 英文维基(仅滞后预警,不入库)                    analysis_posts / predictions / site_config
+讨论会话(研判/预测/候选人/事件)──→ candidates / timeline_events    candidates / timeline_events
 ```
 
-- **app.py** 主页:`site_config.weekly_brief` 紫色速览卡 + Plotly 趋势图(散点=原始数据,线=滚动均线,Attal 金色加粗)
-- **pages/** 预测看板(命中率战绩)、研判文章(紫色=研判内容的视觉约定)、原始数据表(CSV 下载)
-- **utils/db.py** 全部读写封装;读函数全部容错(表不存在返回空,站点照常打开)
-- **scripts/analysis_to_db.py**:「2027大选讨论」会话经它一句话入库,接口约定在 `docs/讨论会话接入说明.md`,改 JSON 格式两边要同步
+- **app.py** 主页 = **候选人总览大主页**:按政治光谱四阵营(far-left / center-left / center-right / far-right)
+  的候选人卡片墙(民调由 `candidate_standings` 自 polls 实时换算 + 趋势箭头 + 招牌议题 chips + 头像),
+  下方 **Catalyst Events 催化事件**时间线(`timeline_events`,原"大事记");再下面才是 `weekly_brief`
+  紫卡 + Plotly 趋势图(散点=原始数据,线=滚动均线,Attal 金色加粗)。管理员可在站内表单增删候选人/事件。
+- **pages/** 预测看板(命中率战绩)、研判文章(紫色=研判视觉约定;按阵营标签 🔴极左/🟠中左/🟡中右/⚫极右/格局总览 筛选 = 左中右看板)、原始数据表(CSV 下载)
+- **utils/db.py** 全部读写封装;读函数全部容错(表不存在返回空,站点照常打开)。`candidate_standings(df, names)` 给每位候选人算「最新一期均值 + 近一月趋势」(第一轮跨场景平均,粗口径)
+- **scripts/analysis_to_db.py**:「2027大选讨论」会话经它一句话入库研判/预测,接口约定在 `docs/讨论会话接入说明.md`,改 JSON 格式两边要同步
+- **scripts/seed_dashboard.py**:候选人花名册 + Catalyst Events 种子数据,改这里再跑一次即覆盖
+
+### 政治光谱约定(候选人分阵营,务必遵守)
+
+`candidates.camp` 四值:`far-left`(梅朗雄/LFI)、`center-left`(格鲁克斯曼/社民)、
+`center-right`(菲利普·阿塔尔·雷塔约·卡斯泰)、`far-right`(巴德拉·勒庞/RN)。
+**站主定调:阿塔尔算中右——"中间派"其实就是菲利普+阿塔尔,两人都偏右、与 LR 区别不大。**
+`candidates.poll_name` 必须 = `polls.candidate` 里的姓氏(如 Mélenchon),首页据此实时算民调。
 
 ### scenario 与 scenario_group(最关键的概念)
 
