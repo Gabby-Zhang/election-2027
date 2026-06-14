@@ -102,3 +102,76 @@ def get_analyses(limit=100):
 
 def add_analysis(data: dict):
     return get_supabase_admin().table("analysis_posts").insert(data).execute()
+
+
+# ── 候选人档案(首页总览)──────────────────────────────────────────────────────
+def get_candidates(only_active=True):
+    db = get_supabase()
+    try:
+        q = db.table("candidates").select("*").order("sort_order", desc=True)
+        rows = q.execute().data or []
+    except Exception:
+        return []
+    if only_active:
+        rows = [r for r in rows if r.get("active", True)]
+    return rows
+
+
+def upsert_candidate(data: dict):
+    """按 name 唯一键 upsert,站内表单与 seed 脚本共用。"""
+    return (get_supabase_admin().table("candidates")
+            .upsert(data, on_conflict="name").execute())
+
+
+# ── 大事记时间线 ──────────────────────────────────────────────────────────────
+def get_timeline_events(status=None):
+    db = get_supabase()
+    try:
+        q = db.table("timeline_events").select("*").order("event_date")
+        rows = q.execute().data or []
+    except Exception:
+        return []
+    if status:
+        rows = [r for r in rows if r.get("status") == status]
+    return rows
+
+
+def add_timeline_event(data: dict):
+    return get_supabase_admin().table("timeline_events").insert(data).execute()
+
+
+def update_timeline_event(eid, fields: dict):
+    return (get_supabase_admin().table("timeline_events")
+            .update(fields).eq("id", eid).execute())
+
+
+# ── 民调换算:每位候选人最新意向票 + 趋势 ─────────────────────────────────────
+def candidate_standings(df, poll_names):
+    """从 polls DataFrame 给每个 poll_name 算「最新一期均值 + 近一月趋势」。
+    第一轮、跨场景平均(粗口径,够首页一目了然用);返回 {poll_name: {pct, trend}}。
+    trend ∈ {"up","down","flat",None}。"""
+    import pandas as pd
+    out = {}
+    if df is None or df.empty:
+        return {n: {"pct": None, "trend": None} for n in poll_names}
+    r1 = df[df["round"] == 1]
+    for name in poll_names:
+        d = r1[r1["candidate"] == name]
+        if d.empty:
+            out[name] = {"pct": None, "trend": None}
+            continue
+        latest = d["poll_date"].max()
+        pct = float(d[d["poll_date"] == latest]["score"].mean())
+        trend = None
+        prior_win = d[(d["poll_date"] < latest - pd.Timedelta(days=20))
+                      & (d["poll_date"] >= latest - pd.Timedelta(days=55))]
+        if not prior_win.empty:
+            prev = float(prior_win["score"].mean())
+            if pct - prev >= 0.7:
+                trend = "up"
+            elif prev - pct >= 0.7:
+                trend = "down"
+            else:
+                trend = "flat"
+        out[name] = {"pct": pct, "trend": trend}
+    return out

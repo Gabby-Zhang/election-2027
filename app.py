@@ -1,9 +1,13 @@
-"""2027 法国大选追踪站 — 主页:本周形势速览 + 民调聚合趋势图"""
+"""2027 法国大选追踪站 — 主页:候选人总览大主页 + 本周速览 + 民调趋势图"""
+from datetime import date
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
-from utils.db import load_polls, get_config, set_config
+from utils.db import (load_polls, get_config, set_config,
+                      get_candidates, get_timeline_events, candidate_standings,
+                      upsert_candidate, add_timeline_event)
 from utils.auth import admin_sidebar
 
 st.set_page_config(page_title="2027 大选观察站", page_icon="🗳️",
@@ -45,8 +49,129 @@ if st.session_state.get("is_admin"):
             st.success("已保存")
             st.rerun()
 
-# ── 民调趋势主图 ──────────────────────────────────────────────────────────────
 df = load_polls()
+
+# ══ 候选人总览大主页 ══════════════════════════════════════════════════════════
+# 按政治光谱分阵营:每个阵营一个配色,卡片 = 候选人(民调实时算 + 招牌议题)
+CAMPS = [
+    ("far-left",     "🔴 极左",        "#A32D2D", "#FCEBEB", "#791F1F"),
+    ("center-left",  "🟠 中左",        "#993556", "#FBEAF0", "#72243E"),
+    ("center-right", "🟡 中间派 / 中右", "#534AB7", "#EEEDFE", "#3C3489"),
+    ("far-right",    "⚫ 极右",         "#185FA5", "#E6F1FB", "#0C447C"),
+]
+CAMP_ACCENT = {c[0]: c[2] for c in CAMPS}
+
+cands = get_candidates(only_active=True)
+if cands:
+    standings = candidate_standings(df, [c.get("poll_name") for c in cands
+                                         if c.get("poll_name")])
+
+    def _trend_html(t):
+        if t == "up":
+            return '<span style="color:#1d9e75;">↑</span>'
+        if t == "down":
+            return '<span style="color:#e24b4a;">↓</span>'
+        if t == "flat":
+            return '<span style="color:#9e9e9e;">→</span>'
+        return ""
+
+    def _card(c, fill, ink):
+        s = standings.get(c.get("poll_name"), {"pct": None, "trend": None})
+        pct = "—" if s["pct"] is None else "{:.0f}%".format(s["pct"])
+        if c.get("declared"):
+            status = "已宣布" + ((" " + str(c["declared_on"])[:7]) if c.get("declared_on") else "")
+        else:
+            status = "潜在" if "潜在" in (c.get("party") or "") else "未宣布"
+        chips = "".join(
+            '<span style="font-size:11px;background:{};color:{};padding:2px 8px;'
+            'border-radius:8px;">{}</span>'.format(fill, ink, i)
+            for i in (c.get("issues") or []))
+        note = ('<div style="margin-top:7px;font-size:11.5px;color:#6b7280;'
+                'line-height:1.4;">{}</div>'.format(c["note"])) if c.get("note") else ""
+        return (
+            '<div style="flex:1 1 220px;min-width:210px;background:#fff;'
+            'border:0.5px solid rgba(0,0,0,.12);border-left:3px solid {accent};'
+            'border-radius:12px;padding:11px 13px;">'
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
+            '<div><div style="font-weight:500;font-size:15px;">{name}</div>'
+            '<div style="font-size:12px;color:#6b7280;">{party} · {status}</div></div>'
+            '<div style="text-align:right;white-space:nowrap;">'
+            '<div style="font-size:22px;font-weight:500;line-height:1;">{pct} {trend}</div></div>'
+            '</div>'
+            '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px;">{chips}</div>'
+            '{note}</div>'
+        ).format(accent=CAMP_ACCENT[c["camp"]], name=c["name"],
+                 party=c.get("party") or "", status=status, pct=pct,
+                 trend=_trend_html(s["trend"]), chips=chips, note=note)
+
+    st.markdown("### 候选人总览")
+    st.caption("按政治光谱排列 · 民调实时算自原始数据 · 细读见「📝 研判文章」按阵营筛选")
+    for code, label, accent, fill, ink in CAMPS:
+        group = [c for c in cands if c["camp"] == code]
+        if not group:
+            continue
+        st.markdown(
+            '<div style="display:flex;align-items:center;gap:8px;margin:14px 0 8px;">'
+            '<span style="font-size:14px;font-weight:500;color:{ink};">{label}</span></div>'
+            '<div style="display:flex;flex-wrap:wrap;gap:10px;">{cards}</div>'.format(
+                ink=ink, label=label,
+                cards="".join(_card(c, fill, ink) for c in group)),
+            unsafe_allow_html=True)
+
+    # ── 待观察大事记 ──────────────────────────────────────────────────────────
+    upcoming = get_timeline_events(status="upcoming")
+    if upcoming:
+        rows = "".join(
+            '<div style="display:flex;gap:12px;align-items:center;padding:3px 0;">'
+            '<span style="font-size:12px;font-weight:500;min-width:60px;color:{color};">{date}</span>'
+            '<span style="font-size:13px;">{title}</span></div>'.format(
+                color=CAMP_ACCENT.get(e.get("camp"), "#534AB7"),
+                date=str(e["event_date"])[5:], title=e["title"])
+            for e in upcoming)
+        st.markdown(
+            '<div style="margin-top:18px;border-top:0.5px solid rgba(0,0,0,.12);padding-top:12px;">'
+            '<div style="font-size:14px;font-weight:500;margin-bottom:8px;">⚡ Catalyst Events · 催化事件</div>'
+            '{}</div>'.format(rows), unsafe_allow_html=True)
+
+# ── 管理:候选人 / 大事记(仅管理员)─────────────────────────────────────────────
+if st.session_state.get("is_admin"):
+    with st.expander("⚙️ 管理候选人 / Catalyst Events"):
+        cc, ce = st.columns(2)
+        with cc.form("add_cand", clear_on_submit=True):
+            st.markdown("**候选人(按名字 upsert)**")
+            cn = st.text_input("显示名", placeholder="梅朗雄")
+            pn = st.text_input("民调姓氏(=polls.candidate)", placeholder="Mélenchon")
+            pty = st.text_input("党派", placeholder="LFI 不屈法国")
+            cmp = st.selectbox("阵营", [c[0] for c in CAMPS],
+                               format_func=lambda x: dict((c[0], c[1]) for c in CAMPS)[x])
+            decl = st.checkbox("已宣布参选")
+            iss = st.text_input("招牌议题(逗号分隔)", placeholder="退休60岁, 媒体反垄断")
+            nt = st.text_input("一行点评")
+            so = st.number_input("排序(大在前)", value=50, step=10)
+            if st.form_submit_button("保存候选人") and cn.strip():
+                upsert_candidate({
+                    "name": cn.strip(), "poll_name": pn.strip() or None,
+                    "party": pty.strip() or None, "camp": cmp, "declared": decl,
+                    "issues": [t.strip() for t in iss.split(",") if t.strip()],
+                    "note": nt.strip() or None, "sort_order": int(so), "active": True})
+                st.success("已保存"); st.rerun()
+        with ce.form("add_event", clear_on_submit=True):
+            st.markdown("**Catalyst Event**")
+            ed = st.date_input("日期", value=date.today())
+            et = st.text_input("事件标题", placeholder="雷塔约 · 花卉公园首场大集会")
+            ecmp = st.selectbox("关联阵营", [c[0] for c in CAMPS],
+                                format_func=lambda x: dict((c[0], c[1]) for c in CAMPS)[x],
+                                key="ev_camp")
+            edesc = st.text_input("说明(可选)")
+            if st.form_submit_button("添加 Catalyst Event") and et.strip():
+                add_timeline_event({
+                    "event_date": ed.isoformat(), "title": et.strip(),
+                    "camp": ecmp, "description": edesc.strip() or None,
+                    "status": "upcoming"})
+                st.success("已添加"); st.rerun()
+
+# ══ 民调趋势主图 ══════════════════════════════════════════════════════════════
+st.markdown("### 民调趋势")
 if df.empty:
     st.info("polls 表还没有数据,先跑 `python3 scripts/fetch_polls.py`")
     st.stop()
