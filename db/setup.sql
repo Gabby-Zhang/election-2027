@@ -68,8 +68,9 @@ create table if not exists candidates (
               check (camp in ('far-left','center-left','center-right','far-right')),
   declared    boolean not null default false,  -- 是否已正式宣布参选
   declared_on date,                            -- 宣布日期(declared 时填)
+  bio         text,                            -- 一句话身份/政绩简介(背景,如 "马克龙首任总理…")
   issues      text[] default '{}',             -- 招牌议题 chips
-  note        text,                            -- 一行点评(如 "数字城案" / "三个月窗口")
+  note        text,                            -- 一行当前动态点评(如 "数字城案" / "三个月窗口")
   avatar_url  text,                            -- 头像图 URL(维基头像);空则首页降级为姓名首字圆形
   sort_order  int not null default 0,          -- 同阵营内排序,大在前
   active      boolean not null default true,   -- 下架不删(战绩文化)
@@ -78,6 +79,7 @@ create table if not exists candidates (
 create index if not exists candidates_camp_idx on candidates (camp, sort_order desc);
 -- 已建过表的库补列:
 alter table candidates add column if not exists avatar_url text;
+alter table candidates add column if not exists bio text;
 
 -- ── Catalyst Events 催化事件(首页待观察事件时间线)──────────────────────────
 create table if not exists timeline_events (

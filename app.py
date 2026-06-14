@@ -87,7 +87,9 @@ if cands:
             'border-radius:8px;">{}</span>'.format(fill, ink, i)
             for i in (c.get("issues") or []))
         note = ('<div style="margin-top:7px;font-size:11.5px;color:#6b7280;'
-                'line-height:1.4;">{}</div>'.format(c["note"])) if c.get("note") else ""
+                'line-height:1.4;">▸ {}</div>'.format(c["note"])) if c.get("note") else ""
+        bio = ('<div style="margin-top:7px;font-size:12px;color:#4b5563;'
+               'line-height:1.5;">{}</div>'.format(c["bio"])) if c.get("bio") else ""
         if c.get("avatar_url"):
             avatar = ('<img src="{}" alt="{}" style="width:38px;height:38px;'
                       'border-radius:50%;object-fit:cover;object-position:top;'
@@ -109,11 +111,12 @@ if cands:
             '<div style="text-align:right;white-space:nowrap;">'
             '<div style="font-size:22px;font-weight:500;line-height:1;">{pct} {trend}</div></div>'
             '</div>'
+            '{bio}'
             '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px;">{chips}</div>'
             '{note}</div>'
         ).format(accent=CAMP_ACCENT[c["camp"]], avatar=avatar, name=c["name"],
                  party=c.get("party") or "", status=status, pct=pct,
-                 trend=_trend_html(s["trend"]), chips=chips, note=note)
+                 trend=_trend_html(s["trend"]), bio=bio, chips=chips, note=note)
 
     st.markdown("### 候选人总览")
     st.caption("按政治光谱排列 · 民调实时算自原始数据 · 细读见「📝 研判文章」按阵营筛选")
@@ -156,14 +159,16 @@ if st.session_state.get("is_admin"):
             cmp = st.selectbox("阵营", [c[0] for c in CAMPS],
                                format_func=lambda x: dict((c[0], c[1]) for c in CAMPS)[x])
             decl = st.checkbox("已宣布参选")
+            bo = st.text_input("一句话简介(身份/政绩)", placeholder="马克龙首任总理(2017–2020)…")
             iss = st.text_input("招牌议题(逗号分隔)", placeholder="退休60岁, 媒体反垄断")
-            nt = st.text_input("一行点评")
+            nt = st.text_input("一行当前动态点评")
             av = st.text_input("头像 URL(可选)", placeholder="https://…jpg;留空则首字圆")
             so = st.number_input("排序(大在前)", value=50, step=10)
             if st.form_submit_button("保存候选人") and cn.strip():
                 upsert_candidate({
                     "name": cn.strip(), "poll_name": pn.strip() or None,
                     "party": pty.strip() or None, "camp": cmp, "declared": decl,
+                    "bio": bo.strip() or None,
                     "issues": [t.strip() for t in iss.split(",") if t.strip()],
                     "note": nt.strip() or None, "avatar_url": av.strip() or None,
                     "sort_order": int(so), "active": True})
