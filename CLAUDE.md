@@ -45,7 +45,8 @@ assert not at.exception
 ```
 
 - **app.py** 主页 = **候选人总览大主页**:按政治光谱四阵营(far-left / center-left / center-right / far-right)
-  的候选人卡片墙(民调由 `candidate_standings` 自 polls 实时换算 + 趋势箭头 + 招牌议题 chips + 头像),
+  的候选人卡片墙。每张卡 = 头像 + 姓名·党派·状态 + 民调 %(由 `candidate_standings` 自 polls 实时换算)
+  + 趋势箭头 + 一句话身份/政绩简介 `bio` + 招牌议题 `issues` chips + 当前动态点评 `note`。
   下方 **Catalyst Events 催化事件**时间线(`timeline_events`,原"大事记");再下面才是 `weekly_brief`
   紫卡 + Plotly 趋势图(散点=原始数据,线=滚动均线,Attal 金色加粗)。管理员可在站内表单增删候选人/事件。
 - **pages/** 预测看板(命中率战绩)、研判文章(紫色=研判视觉约定;按阵营标签 🔴极左/🟠中左/🟡中右/⚫极右/格局总览 筛选 = 左中右看板)、原始数据表(CSV 下载)
@@ -58,7 +59,15 @@ assert not at.exception
 `candidates.camp` 四值:`far-left`(梅朗雄/LFI)、`center-left`(格鲁克斯曼/社民)、
 `center-right`(菲利普·阿塔尔·雷塔约·卡斯泰)、`far-right`(巴德拉·勒庞/RN)。
 **站主定调:阿塔尔算中右——"中间派"其实就是菲利普+阿塔尔,两人都偏右、与 LR 区别不大。**
-`candidates.poll_name` 必须 = `polls.candidate` 里的姓氏(如 Mélenchon),首页据此实时算民调。
+
+`candidates` 关键字段:
+- `poll_name` 必须 = `polls.candidate` 里的姓氏(如 Mélenchon),首页据此实时算民调
+- `bio`(一句话身份/政绩,**背景**)≠ `note`(一行**当前动态**点评,卡上以 `▸` 前缀显示)
+- `issues` = 招牌议题 text[](卡上 chips);`sort_order` 同阵营内大在前;`active` 下架不删(战绩文化)
+- `avatar_url` = 维基头像直链(`upload.wikimedia.org`),空则首页降级为姓名首字圆;
+  取法:`curl https://fr.wikipedia.org/api/rest_v1/page/summary/<Title>` 的 `.thumbnail.source`(已验证 8 位全 200)
+
+花名册与 Catalyst Events 的种子在 `scripts/seed_dashboard.py`(按 `name` upsert),改那里再跑一次即覆盖。
 
 ### scenario 与 scenario_group(最关键的概念)
 
@@ -90,4 +99,4 @@ assert not at.exception
 ## 定时任务(GitHub Actions)
 
 - `fetch_polls.yml` 每日 06:30 UTC 抓民调;失败推 ntfy
-- `backup.yml` 每周一备份四张表为 artifact(保留 90 天)——预测/研判是手工内容,这是唯一灾备
+- `backup.yml` 每周一备份手工内容表(polls/analysis_posts/predictions/site_config)为 artifact(保留 90 天)——预测/研判是手工内容,这是唯一灾备;`candidates`/`timeline_events` 可由 `seed_dashboard.py` 重建,暂未纳入备份(加候选人后建议把新表也加进 backup.yml)
