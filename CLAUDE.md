@@ -54,6 +54,15 @@ assert not at.exception
 - **scripts/analysis_to_db.py**:「2027大选讨论」会话经它一句话入库研判/预测,接口约定在 `docs/讨论会话接入说明.md`,改 JSON 格式两边要同步
 - **scripts/seed_dashboard.py**:候选人花名册 + Catalyst Events 种子数据,改这里再跑一次即覆盖
 
+### 多页导航(改侧边栏标题 / 加页面前必读)
+
+`app.py` 只是导航入口,用 `st.navigation` 显式定义侧边栏;首页内容在 `home.py`,三个子页面在 `views/`。
+
+- 首页侧边栏标签固定为「2027法国大选观察站」(**无 emoji**):靠 `st.Page("home.py", title="2027法国大选观察站", default=True)`。子页面 `st.Page("views/...")` 不传 `title`,图标+名称由文件名自动推断(开头 emoji→图标、数字前缀剥掉、下划线→空格)。
+- **子页面目录必须叫 `views/`,绝不能叫 `pages/`**:只要根下存在 `pages/` 目录,Streamlit 就强制走 V1 多页模式——用主文件名(`app.py`→"app")当侧边栏首页标题,并**完全跳过 `app.py` 里的 `st.navigation`**(见 streamlit `script_runner._mpa_v1`)。这就是首页标题一度显示成 "app" 的根因。
+- 加页面:文件丢进 `views/`,再在 `app.py` 的 `st.Page` 列表里登记一行。
+- 验证侧边栏真实标题:`streamlit run app.py` 起服务后,读服务器发出的 `navigation` ForwardMsg 的 `app_pages`(**别只看"启动无报错"**——V1 被误触发时同样不报错,只是标题悄悄错掉)。
+
 ### 政治光谱约定(候选人分阵营,务必遵守)
 
 `candidates.camp` 四值:`far-left`(梅朗雄/LFI)、`center-left`(格鲁克斯曼/社民)、
