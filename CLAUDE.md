@@ -27,7 +27,7 @@ JSON
 ```python
 from streamlit.testing.v1 import AppTest
 import toml
-at = AppTest.from_file("app.py", default_timeout=120)
+at = AppTest.from_file("home.py", default_timeout=120)
 for k, v in toml.load(".streamlit/secrets.toml").items():
     at.secrets[k] = v
 at.run()
@@ -44,12 +44,12 @@ assert not at.exception
 讨论会话(研判/预测/候选人/事件)──→ candidates / timeline_events    candidates / timeline_events
 ```
 
-- **app.py** 主页 = **候选人总览大主页**:按政治光谱四阵营(far-left / center-left / center-right / far-right)
+- **app.py** = 导航入口(`st.navigation`,显式定义侧边栏四页);**home.py** 主页 = **候选人总览大主页**:按政治光谱四阵营(far-left / center-left / center-right / far-right)
   的候选人卡片墙。每张卡 = 头像 + 姓名·党派·状态 + 民调 %(由 `candidate_standings` 自 polls 实时换算)
   + 趋势箭头 + 一句话身份/政绩简介 `bio` + 招牌议题 `issues` chips + 当前动态点评 `note`。
   下方 **Catalyst Events 催化事件**时间线(`timeline_events`,原"大事记");再下面才是 `weekly_brief`
   紫卡 + Plotly 趋势图(散点=原始数据,线=滚动均线,Attal 金色加粗)。管理员可在站内表单增删候选人/事件。
-- **pages/** 预测看板(命中率战绩)、研判文章(紫色=研判视觉约定;按阵营标签 🔴极左/🟠中左/🟡中右/⚫极右/格局总览 筛选 = 左中右看板)、原始数据表(CSV 下载)
+- **views/** 预测看板(命中率战绩)、研判文章(紫色=研判视觉约定;按阵营标签 🔴极左/🟠中左/🟡中右/⚫极右/格局总览 筛选 = 左中右看板)、原始数据表(CSV 下载)
 - **utils/db.py** 全部读写封装;读函数全部容错(表不存在返回空,站点照常打开)。`candidate_standings(df, names)` 给每位候选人算「最新一期均值 + 近一月趋势」(第一轮跨场景平均,粗口径)
 - **scripts/analysis_to_db.py**:「2027大选讨论」会话经它一句话入库研判/预测,接口约定在 `docs/讨论会话接入说明.md`,改 JSON 格式两边要同步
 - **scripts/seed_dashboard.py**:候选人花名册 + Catalyst Events 种子数据,改这里再跑一次即覆盖
