@@ -8,6 +8,7 @@ pages = [
     st.Page("views/1_🔮_预测看板.py"),
     st.Page("views/2_📝_研判文章.py"),
     st.Page("views/3_📊_原始数据.py"),
+    st.Page("views/4_⚡_催化事件.py"),
 ]
 
 st.navigation(pages).run()

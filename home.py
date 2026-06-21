@@ -145,7 +145,10 @@ if cands:
         st.markdown(
             '<div style="margin-top:18px;border-top:0.5px solid rgba(0,0,0,.12);padding-top:12px;">'
             '<div style="font-size:14px;font-weight:500;margin-bottom:8px;">⚡ Catalyst Events · 催化事件</div>'
-            '{}</div>'.format(rows), unsafe_allow_html=True)
+            '{}'
+            '<div style="margin-top:8px;font-size:12px;color:#6b7280;">'
+            '详细请看侧边栏 <b>⚡ 催化事件</b>(含已发生与按阵营筛选)</div>'
+            '</div>'.format(rows), unsafe_allow_html=True)
 
 # ── 管理:候选人 / 大事记(仅管理员)─────────────────────────────────────────────
 if st.session_state.get("is_admin"):
