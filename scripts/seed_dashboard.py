@@ -81,18 +81,18 @@ CANDIDATES = [
      "avatar_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Castex_Matignon.jpg/330px-Castex_Matignon.jpg"},
 
     # ⚫ 极右
-    {"name": "巴德拉", "poll_name": "Bardella", "party": "RN 国民联盟",
-     "camp": "far-right", "declared": True, "declared_on": None,
+    {"name": "勒庞", "poll_name": "Le Pen", "party": "RN 国民联盟",
+     "camp": "far-right", "declared": True, "declared_on": "2026-07-07",
+     "bio": "国民联盟前主席,推动「去妖魔化」并改党名;三度参选总统、2017 与 2022 两度进第二轮;2025 因欧洲议会助理案被判禁选,2026-07 上诉改判恢复参选资格(贪腐定罪维持,刑期减为3年含1年电子手环居家)。",
+     "issues": ["移民/认同", "法国人优先"],
+     "note": "上诉改判恢复资格,已宣布参选『不会改变主意』;RN 正式出战人选,待观察电子手环/居家限制是否影响竞选自由", "sort_order": 100,
+     "avatar_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Marine_Le_Pen_2025_%28cropped%29.jpg/330px-Marine_Le_Pen_2025_%28cropped%29.jpg"},
+    {"name": "巴德拉", "poll_name": "Bardella", "party": "RN 国民联盟(备胎)",
+     "camp": "far-right", "declared": False, "declared_on": None,
      "bio": "国民联盟主席(2022 起接替勒庞)、欧洲议员;2024 欧选领衔 RN 获约 31% 全国第一,尚无政府执政经历。",
      "issues": ["增值税降至5.5%", "驱逐外籍罪犯", "福利法国人优先"],
-     "note": "稳居第一33%,待7/7勒庞裁决定接棒", "sort_order": 100,
+     "note": "7/7勒庞上诉改判恢复资格,退居党务/备胎;若勒庞刑罚阻碍竞选仍是第一顺位接棒", "sort_order": 90,
      "avatar_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/MEP_Jordan_Bardella.jpg/330px-MEP_Jordan_Bardella.jpg"},
-    {"name": "勒庞", "poll_name": "Le Pen", "party": "RN 国民联盟(潜在)",
-     "camp": "far-right", "declared": False, "declared_on": None,
-     "bio": "国民联盟前主席,推动「去妖魔化」并改党名;三度参选总统、2017 与 2022 两度进第二轮;2025 因欧洲议会助理案被判禁选,上诉中。",
-     "issues": ["移民/认同", "法国人优先"],
-     "note": "7/7上诉裁决决定能否参选", "sort_order": 90,
-     "avatar_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Marine_Le_Pen_2025_%28cropped%29.jpg/330px-Marine_Le_Pen_2025_%28cropped%29.jpg"},
 ]
 
 # ── Catalyst Events 催化事件(待观察) ────────────────────────────────────────
@@ -112,9 +112,9 @@ TIMELINE = [
     {"event_date": "2026-07-05", "title": "菲利普 · 阿迪达斯球馆启动大会",
      "candidate": "菲利普", "camp": "center-right", "status": "upcoming",
      "description": "约9000人场馆;若坐不满恐重演佩克雷斯半空场"},
-    {"event_date": "2026-07-07", "title": "勒庞上诉裁决 · 决定RN由谁出战",
-     "candidate": "勒庞", "camp": "far-right", "status": "upcoming",
-     "description": "维持禁选则巴德拉接棒;接下来一个月最具决定性的单一事件"},
+    {"event_date": "2026-07-07", "title": "勒庞上诉改判 · 恢复2027参选资格",
+     "candidate": "勒庞", "camp": "far-right", "status": "past",
+     "description": "巴黎上诉法院将不参选禁令减至已服满,勒庞恢复2027参选资格(贪腐定罪维持,刑期减为3年含1年电子手环居家);当日宣布参选『不会改变主意』,巴德拉退居备胎。RN 出战人选尘埃落定,但电子手环/居家限制是否掣肘竞选成新变量"},
 ]
 
 
