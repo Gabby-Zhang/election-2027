@@ -79,6 +79,12 @@ CANDIDATES = [
      "issues": ["接地气技术官僚", "无司法问题"],
      "note": "潜在变量,或11月宣布;若菲利普垮台可接盘", "sort_order": 50,
      "avatar_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Castex_Matignon.jpg/330px-Castex_Matignon.jpg"},
+    {"name": "利斯纳尔", "poll_name": "Lisnard", "party": "Nouvelle Énergie 新能量",
+     "camp": "center-right", "declared": True, "declared_on": None,
+     "bio": "戛纳市长(2014 起)、法国市长协会(AMF)主席;2026-03 以初选「被操纵」为由退出 LR,以自创运动 Nouvelle Énergie 参选。",
+     "issues": ["削减公共开支", "减税去管制", "学校回归基础", "开放式右翼初选"],
+     "note": "10月 Ifop 6%,首次反超雷塔约(5%);多数民调仍 2–5%,很少被测", "sort_order": 55,
+     "avatar_url": None},
 
     # ⚫ 极右
     {"name": "巴德拉", "poll_name": "Bardella", "party": "RN 国民联盟",

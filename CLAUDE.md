@@ -66,7 +66,7 @@ assert not at.exception
 ### 政治光谱约定(候选人分阵营,务必遵守)
 
 `candidates.camp` 四值:`far-left`(梅朗雄/LFI)、`center-left`(格鲁克斯曼/社民)、
-`center-right`(菲利普·阿塔尔·雷塔约·卡斯泰)、`far-right`(巴德拉·勒庞/RN)。
+`center-right`(菲利普·阿塔尔·雷塔约·卡斯泰·利斯纳尔)、`far-right`(巴德拉·勒庞/RN)。
 **站主定调:阿塔尔算中右——"中间派"其实就是菲利普+阿塔尔,两人都偏右、与 LR 区别不大。**
 
 `candidates` 关键字段:
